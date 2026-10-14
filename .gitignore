@@ -1,0 +1,15 @@
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+*.log
+.DS_Store
+.vercel/
+*.pem
+
+# Keep real credentials local; only the empty template belongs in Git.
+.env*
+!.env.example
