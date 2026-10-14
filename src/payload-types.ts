@@ -70,6 +70,7 @@ export interface Config {
     employees: Employee;
     authors: Author;
     books: Book;
+    members: Member;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -80,6 +81,7 @@ export interface Config {
     employees: EmployeesSelect<false> | EmployeesSelect<true>;
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
     books: BooksSelect<false> | BooksSelect<true>;
+    members: MembersSelect<false> | MembersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -190,6 +192,29 @@ export interface Book {
   createdAt: string;
 }
 /**
+ * Library reader cards. Members do not have login accounts.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members".
+ */
+export interface Member {
+  id: number;
+  /**
+   * The reader’s name.
+   */
+  name: string;
+  /**
+   * The unique number of this reader’s library card.
+   */
+  cardNumber: string;
+  /**
+   * Optional contact email for the reader. This is not a login.
+   */
+  email?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -224,6 +249,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'books';
         value: number | Book;
+      } | null)
+    | ({
+        relationTo: 'members';
+        value: number | Member;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -309,6 +338,17 @@ export interface BooksSelect<T extends boolean = true> {
   inventoryNumber?: T;
   isbn?: T;
   authors?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members_select".
+ */
+export interface MembersSelect<T extends boolean = true> {
+  name?: T;
+  cardNumber?: T;
+  email?: T;
   updatedAt?: T;
   createdAt?: T;
 }
