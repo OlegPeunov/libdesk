@@ -3,6 +3,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildConfig } from 'payload'
 
+import { Authors } from './collections/Authors'
+import { Books } from './collections/Books'
 import { Employees } from './collections/Employees'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -29,7 +31,7 @@ export default buildConfig({
       titleSuffix: '— LibDesk',
     },
   },
-  collections: [Employees],
+  collections: [Employees, Authors, Books],
   db: postgresAdapter({
     pool: {
       connectionString: requiredEnv('DATABASE_URL'),

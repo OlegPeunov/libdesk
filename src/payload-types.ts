@@ -68,6 +68,8 @@ export interface Config {
   blocks: {};
   collections: {
     employees: Employee;
+    authors: Author;
+    books: Book;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,6 +78,8 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     employees: EmployeesSelect<false> | EmployeesSelect<true>;
+    authors: AuthorsSelect<false> | AuthorsSelect<true>;
+    books: BooksSelect<false> | BooksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -147,6 +151,46 @@ export interface Employee {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "authors".
+ */
+export interface Author {
+  id: number;
+  /**
+   * The author’s name. Author records can be shared by multiple books.
+   */
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Each record represents one physical copy of a book.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "books".
+ */
+export interface Book {
+  id: number;
+  /**
+   * The book’s title. Multiple physical copies may have the same title.
+   */
+  title: string;
+  /**
+   * The unique inventory number assigned to this physical copy.
+   */
+  inventoryNumber: string;
+  /**
+   * Optional ISBN. Multiple physical copies may share the same ISBN.
+   */
+  isbn?: string | null;
+  /**
+   * Choose one or more authors, or create an author here. Editing an author changes the shared record for every related book.
+   */
+  authors?: (number | Author)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -168,10 +212,19 @@ export interface PayloadKv {
  */
 export interface PayloadLockedDocument {
   id: number;
-  document?: {
-    relationTo: 'employees';
-    value: number | Employee;
-  } | null;
+  document?:
+    | ({
+        relationTo: 'employees';
+        value: number | Employee;
+      } | null)
+    | ({
+        relationTo: 'authors';
+        value: number | Author;
+      } | null)
+    | ({
+        relationTo: 'books';
+        value: number | Book;
+      } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'employees';
@@ -237,6 +290,27 @@ export interface EmployeesSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "authors_select".
+ */
+export interface AuthorsSelect<T extends boolean = true> {
+  name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "books_select".
+ */
+export interface BooksSelect<T extends boolean = true> {
+  title?: T;
+  inventoryNumber?: T;
+  isbn?: T;
+  authors?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
