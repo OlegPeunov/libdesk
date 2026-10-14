@@ -7,6 +7,8 @@ import { Authors } from './collections/Authors'
 import { Books } from './collections/Books'
 import { Employees } from './collections/Employees'
 import { Members } from './collections/Members'
+import { Loans } from './collections/Loans'
+import { loanActiveIndex, loanReferences } from './database/loanSchema'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -32,7 +34,7 @@ export default buildConfig({
       titleSuffix: '— LibDesk',
     },
   },
-  collections: [Employees, Authors, Books, Members],
+  collections: [Employees, Authors, Books, Members, Loans],
   db: postgresAdapter({
     pool: {
       connectionString: requiredEnv('DATABASE_URL'),
@@ -40,6 +42,8 @@ export default buildConfig({
     push: false,
     disableCreateDatabase: true,
     migrationDir: path.resolve(dirname, 'migrations'),
+    beforeSchemaInit: [loanReferences],
+    afterSchemaInit: [loanActiveIndex],
   }),
   secret: requiredEnv('PAYLOAD_SECRET'),
   serverURL,

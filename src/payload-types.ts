@@ -71,6 +71,7 @@ export interface Config {
     authors: Author;
     books: Book;
     members: Member;
+    loans: Loan;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
     books: BooksSelect<false> | BooksSelect<true>;
     members: MembersSelect<false> | MembersSelect<true>;
+    loans: LoansSelect<false> | LoansSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -215,6 +217,37 @@ export interface Member {
   createdAt: string;
 }
 /**
+ * One loan per physical book copy. Returned loans remain in history.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loans".
+ */
+export interface Loan {
+  id: number;
+  /**
+   * One physical copy. Cannot be changed after the loan is created.
+   */
+  book: number | Book;
+  /**
+   * The reader borrowing this copy. Cannot be changed after creation.
+   */
+  member: number | Member;
+  /**
+   * Issue date and time. Cannot be changed after creation.
+   */
+  issuedAt: string;
+  /**
+   * Must be after issue time. Can be extended while the loan is active.
+   */
+  dueAt: string;
+  /**
+   * Empty means active. A return closes the loan permanently.
+   */
+  returnedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -253,6 +286,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'members';
         value: number | Member;
+      } | null)
+    | ({
+        relationTo: 'loans';
+        value: number | Loan;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -349,6 +386,19 @@ export interface MembersSelect<T extends boolean = true> {
   name?: T;
   cardNumber?: T;
   email?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loans_select".
+ */
+export interface LoansSelect<T extends boolean = true> {
+  book?: T;
+  member?: T;
+  issuedAt?: T;
+  dueAt?: T;
+  returnedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

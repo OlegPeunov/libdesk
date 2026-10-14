@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { canDeleteWithNoLoans, protectLoanHistory } from '../loans/access'
 
 export const Books: CollectionConfig = {
   slug: 'books',
@@ -13,6 +14,8 @@ export const Books: CollectionConfig = {
     listSearchableFields: ['title', 'inventoryNumber'],
   },
   defaultSort: 'title',
+  access: { delete: canDeleteWithNoLoans('book') },
+  hooks: { beforeDelete: [protectLoanHistory('book')] },
   fields: [
     {
       name: 'title',
