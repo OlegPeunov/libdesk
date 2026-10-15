@@ -4,9 +4,18 @@ An internal library desk for a catalog of **physical book copies**, reader cards
 lending history. Built with Next.js, TypeScript, Payload CMS, managed PostgreSQL
 (Neon) and private S3-compatible object storage (Cloudflare R2).
 
-**Live demo:** deployment is prepared; Vercel account authorization is still required.
+**Live demo:** [libdesk.vercel.app/admin](https://libdesk.vercel.app/admin).
 **Source:** [OlegPeunov/libdesk](https://github.com/OlegPeunov/libdesk).
 Reviewer credentials are provided privately, never committed.
+
+The review application is deployed on Vercel Hobby in the **LibDesk** workspace,
+using the separate `libdesk_review` PostgreSQL database and a private R2 bucket.
+The `review` dataset contains 30 authors, 150 copies, 80 readers, 300 loans and
+12 covers. Opening the application requires no Vercel account; sign in with the
+supplied LibDesk employee account. Local reviewer access details are kept in
+`.libdesk-private/reviewer-access.md`, excluded from Git and Vercel uploads.
+The Vercel project is connected to `OlegPeunov/libdesk`, with `main` as its
+production branch; no commit or push was performed during deployment.
 
 - [Five-minute reviewer walkthrough](docs/reviewer-guide.md)
 - [Deployment and operational limits](docs/deployment.md)

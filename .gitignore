@@ -16,3 +16,7 @@ coverage/
 
 # Local ownership journals for CLI demo maintenance (no credentials).
 .libdesk-demo/
+
+# Local reviewer credentials and deployment check artifacts.
+.libdesk-private/
+.vercel

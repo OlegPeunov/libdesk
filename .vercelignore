@@ -2,6 +2,8 @@
 .next
 .pnpm-store
 .libdesk-demo
+.libdesk-private
+.vercel
 node_modules
 .env
 .env.*

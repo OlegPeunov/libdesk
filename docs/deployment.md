@@ -5,6 +5,41 @@ and a private Cloudflare R2 bucket. `vercel.json` selects Frankfurt (`fra1`) to 
 the application near the Neon database. No paid hosting upgrade is required by the
 application itself.
 
+## Published review environment
+
+- Application: [https://libdesk.vercel.app/admin](https://libdesk.vercel.app/admin).
+- Vercel workspace / project: `lib-desk/libdesk`, Hobby, Node.js 24.x.
+- Production `SERVER_URL`: `https://libdesk.vercel.app`.
+- Dedicated database: `libdesk_review`; all six existing migrations are applied.
+- Seed namespace: `review`; preserve its local `.libdesk-demo/review.json` journal.
+- Production variables come from the local `.env.review.local`; `.env` remains
+  the separate development environment. Reviewer credentials are not runtime
+  environment variables and are never uploaded.
+- Vercel Authentication is disabled; Payload authentication and server access
+  control protect the application data and private R2 file URLs.
+
+The first deployment was uploaded from the current working directory with
+`pnpm dlx vercel@64.0.2 deploy --prod --yes --scope lib-desk`. Vercel performed the
+production build and TypeScript check, using Corepack and pnpm 11.25.0. The CLI
+dry run confirmed that secrets, local access details and seed journals were
+excluded. Never use `vercel env pull` over the development `.env` file.
+
+The local access file is `.libdesk-private/reviewer-access.md` (mode `600`).
+Share its contents directly with the reviewer; do not commit or upload it.
+
+The public HTTPS smoke check passed: login and 14 JS/CSS assets, both employee
+roles, secure session cookies, server permissions and escalation rejection,
+private R2 photo access and anonymous denial, closed first registration, CSRF,
+and issuance / idempotent return on temporary records. Temporary lending records
+were removed with exact-ID CLI maintenance in the review database; the demo set
+was preserved. Full integration tests and a local production build were not
+repeated for deployment; Vercel performed the production build.
+
+GitHub repository `OlegPeunov/libdesk` is connected to this existing project.
+Vercel's API confirms Git provider `github` and production branch `main`.
+Future pushes to `main` are configured for production deployment. A push-triggered
+build has not been exercised: no commit or push was performed during deployment.
+
 ## Environment
 
 Configure these variables in the hosting project's **Production** environment:
