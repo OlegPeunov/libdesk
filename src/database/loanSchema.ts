@@ -4,6 +4,8 @@ import { uniqueIndex } from '@payloadcms/db-postgres/drizzle/pg-core'
 // Declare the database rules in the schema as well as in migrations, so future
 // migrate:create calls keep them instead of proposing to remove them.
 export const loanReferences: NonNullable<PostgresAdapterArgs['beforeSchemaInit']>[number] = ({ adapter, schema }) => {
+  const photo = adapter.rawTables.books?.columns.photo
+  if (photo?.reference) photo.reference.onDelete = 'restrict'
   for (const field of ['book', 'member']) {
     const column = adapter.rawTables.loans?.columns[field]
     if (column?.reference) {

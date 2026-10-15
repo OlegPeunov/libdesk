@@ -1,5 +1,6 @@
 allowBuilds:
   esbuild: true
+  sharp: true
 storeDir: .pnpm-store
 strictPeerDependencies: true
 verifyDepsBeforeRun: error

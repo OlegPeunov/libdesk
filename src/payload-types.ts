@@ -72,6 +72,7 @@ export interface Config {
     books: Book;
     members: Member;
     loans: Loan;
+    media: Media;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,6 +85,7 @@ export interface Config {
     books: BooksSelect<false> | BooksSelect<true>;
     members: MembersSelect<false> | MembersSelect<true>;
     loans: LoansSelect<false> | LoansSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -179,6 +181,10 @@ export interface Author {
 export interface Book {
   id: number;
   /**
+   * Optional shared photograph. Upload here or choose Media. Removing this link does not delete the file.
+   */
+  photo?: (number | null) | Media;
+  /**
    * The book’s title. Multiple physical copies may have the same title.
    */
   title: string;
@@ -196,6 +202,42 @@ export interface Book {
   authors?: (number | Author)[] | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Shared book photographs. Removing a book or its photo link keeps the file.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Describe the photograph for accessibility. Editing this shared record affects every linked book.
+   */
+  alt: string;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * Library reader cards. Members do not have login accounts.
@@ -294,6 +336,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'loans';
         value: number | Loan;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -376,6 +422,7 @@ export interface AuthorsSelect<T extends boolean = true> {
  * via the `definition` "books_select".
  */
 export interface BooksSelect<T extends boolean = true> {
+  photo?: T;
   title?: T;
   inventoryNumber?: T;
   isbn?: T;
@@ -406,6 +453,40 @@ export interface LoansSelect<T extends boolean = true> {
   returnedAt?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

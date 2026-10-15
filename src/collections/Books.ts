@@ -19,6 +19,18 @@ export const Books: CollectionConfig = {
   hooks: { beforeDelete: [protectLoanHistory('book')] },
   fields: [
     {
+      name: 'photo',
+      type: 'upload',
+      relationTo: 'media',
+      hooks: { beforeChange: [async ({ value, req }) => {
+        if (value !== null && value !== undefined) {
+          await req.payload.findByID({ collection: 'media', id: typeof value === 'object' ? value.id : value, depth: 0, overrideAccess: false, req })
+        }
+        return value
+      }] },
+      admin: { description: 'Optional shared photograph. Upload here or choose Media. Removing this link does not delete the file.' },
+    },
+    {
       name: 'title',
       type: 'text',
       required: true,

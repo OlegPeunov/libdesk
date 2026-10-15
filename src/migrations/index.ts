@@ -3,6 +3,7 @@ import * as migration_20261014_121735_authors_books from './20261014_121735_auth
 import * as migration_20261014_125343_members from './20261014_125343_members';
 import * as migration_20261014_131258_loans from './20261014_131258_loans';
 import * as migration_20261014_140034_employee_roles from './20261014_140034_employee_roles';
+import * as migration_20261015_071559_media_photos from './20261015_071559_media_photos';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261014_140034_employee_roles.up,
     down: migration_20261014_140034_employee_roles.down,
-    name: '20261014_140034_employee_roles'
+    name: '20261014_140034_employee_roles',
+  },
+  {
+    up: migration_20261015_071559_media_photos.up,
+    down: migration_20261015_071559_media_photos.down,
+    name: '20261015_071559_media_photos'
   },
 ];

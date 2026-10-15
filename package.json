@@ -22,17 +22,22 @@
     "migrate:status": "payload migrate:status",
     "test:loans": "payload run tests/loans.integration.ts",
     "test:access": "payload run tests/access.integration.ts",
-    "test": "pnpm test:loans && pnpm test:access"
+    "test:media": "payload run tests/media.integration.ts",
+    "test:media:unavailable": "payload run tests/media.integration.ts unavailable",
+    "test": "pnpm test:loans && pnpm test:access && pnpm test:media && pnpm test:media:unavailable"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1151.0",
     "@payloadcms/db-postgres": "3.90.2",
     "@payloadcms/next": "3.90.2",
+    "@payloadcms/storage-s3": "3.90.2",
     "@payloadcms/ui": "3.90.2",
     "graphql": "16.14.2",
     "next": "16.4.0",
     "payload": "3.90.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "0.34.5"
   },
   "devDependencies": {
     "@types/node": "24.12.3",

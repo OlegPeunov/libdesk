@@ -42,6 +42,7 @@ export class LoanFixtures {
       books_rels: 'SELECT * FROM books_rels ORDER BY id',
       members: 'SELECT * FROM members ORDER BY id',
       loans: 'SELECT * FROM loans ORDER BY id',
+      media: 'SELECT * FROM media ORDER BY id',
     }
     const result: Record<string, string> = {}
     for (const [table, query] of Object.entries(queries)) {
