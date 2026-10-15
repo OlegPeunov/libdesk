@@ -68,5 +68,10 @@ export const Books: CollectionConfig = {
         description: 'Choose one or more authors, or create an author here. Editing an author changes the shared record for every related book.',
       },
     },
+    {
+      name: 'inlineAuthors',
+      type: 'ui',
+      admin: { components: { Field: '/components/InlineAuthors#InlineAuthors' } },
+    },
   ],
 }

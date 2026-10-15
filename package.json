@@ -24,7 +24,8 @@
     "test:access": "payload run tests/access.integration.ts",
     "test:media": "payload run tests/media.integration.ts",
     "test:media:unavailable": "payload run tests/media.integration.ts unavailable",
-    "test": "pnpm test:loans && pnpm test:access && pnpm test:media && pnpm test:media:unavailable"
+    "test:inline": "payload run tests/inline.integration.ts",
+    "test": "pnpm test:loans && pnpm test:access && pnpm test:media && pnpm test:media:unavailable && pnpm test:inline"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1151.0",

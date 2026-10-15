@@ -44,5 +44,10 @@ export const Members: CollectionConfig = {
         description: 'Optional contact email for the reader. This is not a login.',
       },
     },
+    {
+      name: 'inlineLoans',
+      type: 'ui',
+      admin: { components: { Field: '/components/InlineLoans#InlineLoans' } },
+    },
   ],
 }
