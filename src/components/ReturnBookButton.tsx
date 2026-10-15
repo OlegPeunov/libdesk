@@ -12,7 +12,7 @@ export function ReturnBookButton() {
   const [returning, setReturning] = useState(false)
   const [error, setError] = useState('')
 
-  if (!id || data?.returnedAt || !hasSavePermission || user?.collection !== 'employees') return null
+  if (!id || data?.returnedAt || !hasSavePermission || user?.collection !== 'employees' || (user.role !== 'admin' && user.role !== 'librarian')) return null
 
   async function returnBook() {
     if (returning || processing || modified) return

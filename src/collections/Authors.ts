@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isEmployee } from '../access/roles'
 
 export const Authors: CollectionConfig = {
   slug: 'authors',
@@ -12,6 +13,7 @@ export const Authors: CollectionConfig = {
     listSearchableFields: ['name'],
   },
   defaultSort: 'name',
+  access: { create: isEmployee, read: isEmployee, update: isEmployee, delete: isAdmin },
   fields: [
     {
       name: 'name',

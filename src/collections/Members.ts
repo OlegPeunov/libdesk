@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { canDeleteWithNoLoans, protectLoanHistory } from '../loans/access'
+import { isEmployee } from '../access/roles'
 
 export const Members: CollectionConfig = {
   slug: 'members',
@@ -14,7 +15,7 @@ export const Members: CollectionConfig = {
     listSearchableFields: ['name', 'cardNumber', 'email'],
   },
   defaultSort: 'name',
-  access: { delete: canDeleteWithNoLoans('member') },
+  access: { create: isEmployee, read: isEmployee, update: isEmployee, delete: canDeleteWithNoLoans('member') },
   hooks: { beforeDelete: [protectLoanHistory('member')] },
   fields: [
     {

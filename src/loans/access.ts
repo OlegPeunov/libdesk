@@ -1,7 +1,8 @@
 import type { Access, CollectionBeforeDeleteHook, PayloadRequest } from 'payload'
 import { APIError } from 'payload'
+import { isAdmin } from '../access/roles'
 
-export const isEmployee = ({ req }: { req: PayloadRequest }): boolean => req.user?.collection === 'employees'
+export { isEmployee } from '../access/roles'
 
 async function hasLoanHistory(req: PayloadRequest, field: 'book' | 'member', id: number | string) {
   const history = await req.payload.find({
@@ -18,7 +19,7 @@ async function hasLoanHistory(req: PayloadRequest, field: 'book' | 'member', id:
 
 export function canDeleteWithNoLoans(field: 'book' | 'member'): Access {
   return async ({ id, req }) => {
-    if (!isEmployee({ req })) return false
+    if (!isAdmin({ req })) return false
     return id === undefined || !(await hasLoanHistory(req, field, id))
   }
 }

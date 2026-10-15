@@ -133,6 +133,10 @@ export interface Employee {
    * The staff member’s name. This is an employee login, not a reader card.
    */
   name: string;
+  /**
+   * Only an admin can manage another employee’s role. Your own role cannot be changed.
+   */
+  role: 'admin' | 'librarian';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -339,6 +343,7 @@ export interface PayloadMigration {
  */
 export interface EmployeesSelect<T extends boolean = true> {
   name?: T;
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

@@ -20,7 +20,9 @@
     "migrate:create": "payload migrate:create",
     "migrate": "payload migrate",
     "migrate:status": "payload migrate:status",
-    "test:loans": "payload run tests/loans.integration.ts"
+    "test:loans": "payload run tests/loans.integration.ts",
+    "test:access": "payload run tests/access.integration.ts",
+    "test": "pnpm test:loans && pnpm test:access"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
