@@ -13,6 +13,7 @@ import { Media } from './collections/Media'
 import { MAX_FILE_BYTES } from './media/image'
 import { privateMediaStorage } from './media/storage'
 import { loanActiveIndex, loanReferences } from './database/loanSchema'
+import { serverURL } from './serverURL'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -25,8 +26,6 @@ function requiredEnv(name: 'DATABASE_URL' | 'PAYLOAD_SECRET'): string {
 
   return value
 }
-
-const serverURL = process.env.SERVER_URL || 'http://localhost:3000'
 
 export default buildConfig({
   admin: {

@@ -1,224 +1,55 @@
 # LibDesk
 
-LibDesk на Next.js + TypeScript + Payload с PostgreSQL. Есть auth-коллекция
-`Employees`, каталог `Authors` и `Books`, карточки читателей `Members`, выдачи `Loans`, стандартная
-админка `/admin` и REST API Payload.
-Сотрудники входят по email и паролю; хеширование и сессии обслуживает Payload.
-Сотрудники имеют роли `admin` и `librarian`; доступ проверяет серверный access control Payload.
+An internal library desk for a catalog of **physical book copies**, reader cards and
+lending history. Built with Next.js, TypeScript, Payload CMS, managed PostgreSQL
+(Neon) and private S3-compatible object storage (Cloudflare R2).
 
-Основа — [официальный Blank Template Payload v3.90.2](https://github.com/payloadcms/payload/tree/v3.90.2/templates/blank).
-Удалены демонстрационные модели, загрузки, rich text и тестовые зависимости.
-Next.js и React обновлены в пределах peer dependencies выбранного Payload.
+**Live demo:** deployment is prepared; Vercel account authorization is still required.
+**Source:** [OlegPeunov/libdesk](https://github.com/OlegPeunov/libdesk).
+Reviewer credentials are provided privately, never committed.
 
-## Версии
+- [Five-minute reviewer walkthrough](docs/reviewer-guide.md)
+- [Deployment and operational limits](docs/deployment.md)
+- [Take-home requirement map](docs/requirements.md)
+- [Detailed development / test / seed instructions in Russian](docs/development-notes.ru.md)
 
-- Node.js **24.21.0**, pnpm **11.25.0**.
-- Payload и пакеты `@payloadcms/*` **3.90.2**.
-- Next.js **16.4.0**, React / React DOM **19.3.0**.
-- TypeScript **5.7.3** — версия из стабильного Blank Template.
-- GraphQL **16.14.2** — peer dependency Payload; GraphQL API выключен.
+## What it does
 
-Прямые зависимости закреплены точными версиями, транзитивные — `pnpm-lock.yaml`.
-Совместимость: [установка Payload](https://payloadcms.com/docs/getting-started/installation)
-и peer dependencies пакетов. В частности, Payload 3.90.2 требует Next.js 16.3.3+
-при использовании ветки 16.x.
+- Maintain authors, copies, reader cards and private photographs in the generated Payload admin.
+- Search and filter lists; edit related authors inside a Book and loan due dates inside a Member.
+- Issue a copy, extend an active loan and return it with a custom admin action.
+- Keep immutable returned-loan history. A PostgreSQL partial unique index prevents two active
+  loans for one copy, including concurrent requests; transaction row locks protect updates.
+- Enforce Admin / Librarian permissions on the server and in the admin controls.
 
-## Локальный запуск
+Readers are not employee logins. A Book is one physical copy with a unique inventory number;
+multiple copies may share a title and ISBN. Books and Authors have a many-to-many relationship.
 
-1. Используйте Node.js из `.nvmrc` (`nvm install && nvm use`, если установлен nvm)
-   и pnpm 11.25.0. При наличии Corepack можно выполнить
-   `corepack prepare pnpm@11.25.0 --activate`.
-2. Установите зависимости: `pnpm install --frozen-lockfile`.
-3. Создайте **отдельную пустую PostgreSQL-базу разработки**. Для Neon используйте
-   отдельный development-проект, без production-данных, и получите connection URL.
-   Для этого этапа подойдёт прямое подключение к development-базе с правами на DDL.
-   Сохраните параметры TLS, которые выдаёт провайдер; проверку сертификата не отключайте.
-4. Скопируйте `.env.example` в `.env`. Локально заполните `DATABASE_URL` и
-   `PAYLOAD_SECRET`. Сгенерируйте случайный секрет командой `openssl rand -hex 32`.
-   `SERVER_URL=http://localhost:3000` уже указан в шаблоне.
-   Настоящие значения остаются в `.env`, который исключён из Git.
-   Заполните также четыре `R2_*` переменные для приватного bucket по разделу «Фотографии»
-   ниже. Они обязательны при запуске CLI, приложения и сборки; локального fallback нет.
-5. На пустой базе примените **все существующие миграции**: `pnpm migrate`.
-   Затем проверьте `pnpm migrate:status`: у каждой миграции должно быть `Ran: Yes`.
-   Создавать новую начальную миграцию или включать `db push` не нужно.
-6. Запустите `pnpm dev` и откройте <http://localhost:3000/admin>.
-   На пустой базе Payload перенаправит на `/admin/create-first-user`.
-7. В штатной форме первого пользователя заполните Email, New Password,
-   Confirm Password и Name. В **Role явно выберите Admin**, затем нажмите Create.
-   Автоматического назначения admin нет: стандартное значение роли — `librarian`.
-   Проверьте Account → Role: Admin и доступность Employees. Не создавайте первого
-   сотрудника с ролью Librarian: он не сможет управлять сотрудниками или повысить свою роль.
-8. Выйдите и войдите снова. После первого сотрудника форма первоначальной регистрации
-   больше не открывается, а `POST /api/employees/first-register` возвращает `403`.
-   Следующих сотрудников создаёт admin через Employees → Create New;
-   без изменения Role они получают Librarian. Отдельная регистрация или bootstrap-скрипт не нужны.
+## Local setup
 
-На уже настроенной development-базе используйте существующий аккаунт:
-миграция ролей назначила подтверждённому владельцу `admin`. Повторно проходить
-первоначальную регистрацию не нужно. Корневой адрес перенаправляет на `/admin`.
-
-Без `DATABASE_URL`, `PAYLOAD_SECRET` или доступной PostgreSQL вход в админку
-не работает. Приложение не создаёт базу автоматически и не подменяет PostgreSQL
-другим адаптером.
-
-## Миграции и проверки
-
-Автоматический `db push` выключен **во всех окружениях**. После изменения коллекций:
+Use Node.js **24.21.0** and pnpm **11.25.0** (pinned in `.nvmrc` and `packageManager`).
+Payload is **3.90.2**, Next.js **16.4.0**, React **19.3.0**. Exact dependencies are locked.
 
 ```sh
-pnpm migrate:create meaningful_name
-pnpm migrate
-pnpm generate:types
-pnpm generate:importmap
-pnpm typecheck
-pnpm build
+nvm install
+nvm use
+corepack prepare pnpm@11.25.0 --activate
+pnpm install --frozen-lockfile
+cp .env.example .env
 ```
 
-Миграции, их снимки схемы, `src/payload-types.ts` и import map храним в Git.
-Первую миграцию повторно создавать не нужно. Команды генерации типов и миграции
-не применяют изменения к базе; изменения применяет только `pnpm migrate`.
+Fill `.env` with an empty managed development PostgreSQL database and private R2 bucket:
 
-### Локальный production-режим
+| Variable | Value |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL URL, preserving the provider's TLS settings |
+| `PAYLOAD_SECRET` | Random local secret, e.g. generated with `openssl rand -hex 32` |
+| `SERVER_URL` | `http://localhost:3000` locally; exact HTTPS origin when deployed |
+| `R2_BUCKET`, `R2_ENDPOINT` | Private bucket and its S3 API origin |
+| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Bucket-scoped object read/write credentials |
 
-Подготовьте отдельную тестовую PostgreSQL-базу без рабочих данных. В терминале проверки
-задайте её `DATABASE_URL` и отдельный `PAYLOAD_SECRET` через окружение, не сохраняя секреты
-в командах истории или Git. Если используете `.env`, он должен содержать именно настройки
-этой базы. Переменные окружения терминала имеют приоритет над `.env`.
-Для порта 3100 используйте один и тот же origin при сборке, запуске и открытии браузера:
-
-```sh
-export SERVER_URL=http://127.0.0.1:3100
-pnpm migrate
-pnpm migrate:status
-pnpm build
-pnpm start --hostname 127.0.0.1 --port 3100
-```
-
-Откройте <http://127.0.0.1:3100/admin>. На пустой базе создайте первого Admin по инструкции
-выше; затем проверьте повторный вход, Employees / Authors / Books / Members / Loans,
-создание выдачи и кнопку «Вернуть книгу». `SERVER_URL` задаёт также разрешённый origin
-для CORS и CSRF; не смешивайте `localhost` и `127.0.0.1` или разные порты.
-`pnpm start` запускает готовую production-сборку; сборка и запуск сами миграции не применяют.
-Dev-сервер на порту 3000 можно оставить работающим. Это локальная проверка production-режима,
-а не публикация приложения; для неё HTTPS не настраивается.
-
-В `next.config.mjs` пакет `payload` включён в `serverExternalPackages`: admin SSR и REST
-используют одни классы ошибок из Node.js. Без этого в production-сборке терялись подробности
-`ValidationError`, и форма не могла привязать сообщение о повторной выдаче к полю Book.
-`debug` не включается.
-
-Для проверки production-сервера используйте существующие `pnpm test:loans` и
-`pnpm test:access` можно направить на этот сервер из второго терминала с теми же
-`DATABASE_URL`, `PAYLOAD_SECRET`, `SERVER_URL`, оставив `NODE_ENV` тестового процесса
-не равным `production`. Production-сервер при этом продолжает работать в production-режиме.
-Проверочные записи тесты удаляют сами; временную базу удаляйте только после остановки
-её сервера и подтверждения, что это именно одноразовая база.
-
-Документация: [PostgreSQL-адаптер](https://payloadcms.com/docs/database/postgres),
-[миграции](https://payloadcms.com/docs/database/migrations).
-
-## Каталог и ручная проверка
-
-У автора обязательно имя. У книги обязательны название и уникальный инвентарный
-номер; ISBN и множественная связь с авторами необязательны. Одна запись книги —
-один физический экземпляр, поэтому название и ISBN могут повторяться.
-В списке Books есть название, инвентарный номер, авторы и ISBN; поиск работает
-по названию и инвентарному номеру. Authors показывает имена и позволяет искать по ним.
-
-1. Войдите в `/admin`, откройте Authors и создайте автора с заполненным Name.
-2. Откройте Books → Create New. Заполните Title и Inventory Number, при желании ISBN,
-   затем выберите автора в Authors. Можно выбрать несколько авторов.
-3. Кнопка добавления рядом с Authors открывает стандартный drawer создания автора
-   поверх формы книги. После сохранения автор доступен в поле связи.
-4. Кнопка с карандашом у выбранного автора открывает стандартный drawer редактирования.
-   Это полноценная форма автора с отдельным сохранением, а не встроенные поля книги
-   и не переход на отдельную страницу. Изменение имени относится ко всем книгам
-   этого автора; отмена формы книги не откатывает уже сохранённого автора.
-5. Сохраните книгу и найдите её по названию и инвентарному номеру.
-   Создайте второй экземпляр с теми же Title и ISBN, но другим Inventory Number —
-   сохранение должно пройти. Повтор Inventory Number должен вызвать ошибку.
-
-Стандартное [relationship-поле Payload](https://payloadcms.com/docs/fields/relationship)
-сохранено. Дополнительно ниже него есть редактирование авторов прямо на странице.
-
-### Inline editing: Books → Authors и Members → Loans
-
-Это два клиентских компонента в штатных [UI-полях Payload](https://payloadcms.com/docs/fields/ui),
-без новых таблиц и миграций. Сохранение выполняется обычным REST PATCH с cookie сотрудника;
-права, CSRF, блокировки и hooks Payload действуют так же, как в основной форме.
-Отправляется только `name` автора или `dueAt` выдачи. Родительская форма не отправляется
-и не сбрасывается. После ответа отображается сохранённая сервером запись; при ошибке
-введённое значение остаётся для исправления. Время показывается в часовом поясе браузера.
-
-1. Под admin и librarian откройте сохранённую книгу. Под Authors находится блок
-   «Авторы: редактирование на странице». Измените имя и нажмите «Сохранить автора».
-   Имя общей записи Authors изменится во **всех** связанных книгах. Кнопка Save книги
-   для этого не требуется. Пустое имя должно вызвать ошибку рядом со строкой.
-2. Измените выбор стандартного поля Authors, не сохраняя книгу: блок продолжает
-   показывать только сохранённые связи и предупреждает о различии. После Save книги
-   связи блока обновляются. Для новой книги сначала требуется сохранить её.
-3. В сохранённом Members блок «Выдачи читателя» показывает по пять выдач на страницу.
-   Измените срок активной выдачи и нажмите «Сохранить срок». Дата не позже issuedAt
-   должна вызвать ошибку без потери ввода. Закрытые выдачи доступны только для просмотра.
-   Ссылка «Открыть выдачу» ведёт к полной записи; для inline-сохранения переход не нужен.
-4. Проверьте пагинацию, независимость от несохранённого имени читателя/названия книги,
-   отказ сохранения после выхода в другой вкладке и отказ сервера для уже закрытой выдачи.
-5. В списках Books и Members используйте Search и штатную кнопку Filters:
-   Books — Title / Inventory Number, фильтр по Authors или ISBN;
-   Members — Name / Card Number / Email, фильтр по Email или Card Number.
-
-`pnpm test:inline` проверяет эти REST-операции под обеими ролями, общую запись автора,
-пагинацию, даты, неизменность родительских записей и запреты anonymous/CSRF.
-Он включён в `pnpm test`. Для ручной проверки на изолированных временных записях:
-`pnpm test:inline prepare-ui`, затем `pnpm test:inline cleanup-ui`.
-Не запускайте другие тесты между этими командами. Учётные данные фикстур хранятся
-только в приватном временном файле ОС, который удаляется при очистке.
-
-## Читатели и ручная проверка
-
-Members — карточки читателей без авторизации. Обязательны Name и уникальный Card Number;
-Email необязателен. Подпись записи — имя. В списке показаны имя, номер билета и email,
-поиск работает по всем трём полям.
-
-1. Войдите в `/admin`, откройте Members → Create New. Создайте читателя, например
-   «Анна Смирнова» с Card Number `LIB-0001` и Email `anna@example.com`.
-2. В списке Members найдите запись по имени, `LIB-0001` и `anna@example.com`.
-3. Попробуйте создать другого читателя с тем же Card Number `LIB-0001` — сохранение
-   должно завершиться ошибкой. Измените номер на `LIB-0002` и оставьте Email пустым —
-   сохранение должно пройти.
-
-## Выдачи и возврат
-
-Loans связывает один физический экземпляр Books с одним читателем Members.
-Обязательны Book, Member, Issued At (по умолчанию текущее время) и Due At.
-Returned At необязателен: пустое значение означает активную выдачу.
-
-- У экземпляра может быть только одна активная выдача. Hook даёт понятную ошибку,
-  а частичный уникальный индекс `loans_one_active_book_idx` на `book_id WHERE returned_at IS NULL`
-  защищает от одновременных запросов. Индекс объявлен и в Drizzle schema hook,
-  чтобы последующие миграции его сохраняли.
-- Due At строго позже Issued At; Returned At не раньше Issued At.
-- После создания нельзя менять Book, Member и Issued At. Срок активной выдачи можно менять.
-- Возврат закрывает выдачу навсегда: закрытую запись нельзя редактировать или открыть снова.
-  Следующая выдача экземпляра — новая запись, предыдущая остаётся в истории.
-- Выдачи нельзя удалять. Книги и читателей с любыми выдачами в истории тоже нельзя удалять:
-  это проверяют access control и hooks Payload, а связи в PostgreSQL используют `ON DELETE RESTRICT`.
-- Просрочка вычисляется как `dueAt < текущее время AND returnedAt отсутствует`;
-  отдельного сохраняемого статуса нет.
-
-Все операции с Loans требуют входа сотрудника. Кнопка **«Вернуть книгу»** вызывает
-`POST /api/loans/:id/return`: сервер записывает своё текущее время через обычный
-`payload.update` с `overrideAccess: false` и исходным `req`. Обновление проходит те же
-hooks и access control, что сохранение формы. Повторный или параллельный возврат
-возвращает уже сохранённую дату, не перезаписывая её. Изменения существующей выдачи
-используют `SELECT … FOR UPDATE` в той же транзакции Payload: после ожидания блокировки
-сервер заново проверяет актуальное состояние. Cookie-запросы используют CSRF-защиту Payload.
-Операция доступна обеим ролям; ограничения истории одинаковы для admin и librarian.
-
-### Автоматические проверки
-
-Примените миграции к **development-базе** и запустите приложение:
+All seven variables are required in production. There is no local database or upload fallback.
+Never commit real values. Then:
 
 ```sh
 pnpm migrate
@@ -226,209 +57,86 @@ pnpm migrate:status
 pnpm dev
 ```
 
-Во втором терминале с тем же `.env`:
+Open [localhost:3000/admin](http://localhost:3000/admin). In the first-user form, **explicitly
+select Role → Admin**; the default is Librarian. After the first employee, public initial
+registration closes. Admin creates subsequent employees through Employees. Logout is
+`/admin/logout`. Automatic database schema push is disabled; apply existing migrations.
+
+## Demo data
+
+After creating an Admin, run locally:
 
 ```sh
-pnpm test:loans
-pnpm test:access
-# или все наборы последовательно:
-pnpm test
-pnpm typecheck
-pnpm build
+pnpm seed
+pnpm seed:check
+# Destructive only to this tracked demo namespace; requires its ownership journal:
+pnpm seed:reset -- --confirm
 ```
 
-Тестовый скрипт запускается через встроенный `payload run`, использует assertions Node.js и HTTP API:
-новые зависимости не нужны. Проверяются свободный экземпляр, дубликат и гонка выдачи,
-ограничение базы, возврат и новая выдача, повторные/параллельные возвраты, даты,
-неизменяемые поля, закрытая выдача (включая ожидание блокировки), запреты удаления,
-анонимные запросы, CSRF и вычисление просрочки.
+The deterministic fictional dataset contains **30 authors, 150 copies, 80 readers, 300 loans
+and 12 covers**. Initially it has 240 returned loans, 60 active loans and 30 overdue loans.
+There are five copies per edition, books with multiple authors, and 60 copies with photographs.
+Re-running seed reuses the existing dataset. Dates are anchored to its first run.
 
-Тесты допускают только локальный адрес приложения и не запускаются с `NODE_ENV=production`.
-Они создают временных сотрудников с явными ролями и отдельные авторов/книги/читателей
-с префиксом `LIBDESK-TEST-<UUID>-`.
-В `finally` удаляют только свои записи через привилегированный SQL внутри транзакции:
-append-only история не удаляется через прикладной API. Hooks, access control, индекс и
-внешние ключи не отключаются. Проверяется совпадение существующих записей до и после тестов.
-Не редактируйте свои записи во время прогона: такая правка изменит контрольную сумму.
-Если процесс аварийно остановлен до `finally`, очистка не гарантируется.
+Keys use `LD-DEMO-<namespace>-...` and `[DEMO:<namespace>:...]` markers. The ignored local
+`.libdesk-demo/` ownership journal is required for reset and must be retained. Reset refuses
+ambiguous ownership or outside references and never clears the database or entire bucket.
+The published demo uses the `review` namespace; local seed defaults to `v1`.
+See the detailed notes for namespace arguments, recovery and scoped reset behavior.
 
-Для проверки UI на отдельном наборе временных данных можно выполнить
-`pnpm test:loans prepare-ui`, а после проверки — `pnpm test:loans cleanup-ui`.
-Манифест содержит метаданные тестовых фикстур и контрольные суммы, лежит во временной
-папке ОС и удаляется после очистки. Не запускайте другой прогон тестов между этими командами.
+## Roles and security
 
-### Ручная проверка
+| Capability | Admin | Librarian |
+| --- | --- | --- |
+| Maintain authors, books, members and photographs | Yes | Yes |
+| Issue, extend and return active loans | Yes | Yes |
+| Delete unused catalog records / photographs | Yes | No |
+| Manage other employees and roles | Yes | No |
+| Change own name / password | Yes | Yes |
+| Delete loan history or edit a closed loan | No | No |
 
-1. Войдите в `/admin` как сотрудник. Создайте книгу и читателя для проверки.
-2. В Loans → Create New выберите Book и Member, проверьте Issued At, задайте Due At
-   позже выдачи и сохраните. Колонки списка показывают экземпляр, читателя и все три даты.
-3. Попробуйте создать вторую активную выдачу этого экземпляра — получите ошибку Book.
-   Попробуйте неверные даты и изменение Book, Member или Issued At — сервер отклонит сохранение.
-4. В активной выдаче измените Due At и сохраните. При несохранённых изменениях кнопка
-   возврата отключена. Нажмите «Вернуть книгу»: после обновления формы появился Returned At,
-   кнопка возврата и сохранение закрытой записи недоступны.
-5. Создайте новую выдачу того же экземпляра. В списке останутся обе записи.
-   Проверьте быстрые фильтры «Активные», «Возвращённые», «Просроченные» и «Все».
-   В стандартном Filters доступны Book, Member и даты. Чтобы проверить просрочку,
-   создайте выдачу с Issued At и Due At в прошлом, затем верните её — она исчезнет из просроченных.
-6. Проверьте запрет удаления выдачи, книги и читателя с историей; после выхода операции
-   выдачи/возврата через API тоже требуют авторизации.
+Accounts cannot delete themselves or change their own role. Librarians see only their own
+account. Server collection/field access, not hidden buttons alone, enforces these rules.
+Payload handles password hashing and sessions. Cookies are HttpOnly / SameSite=Lax and Secure
+on HTTPS. CORS/CSRF use the configured origin. Anonymous data and file access are denied.
 
-## Роли и права
+Uploads are decoded and validated server-side: JPEG/PNG/WebP, at most 3 MiB, 4096 pixels per
+side, 16 megapixels, no animation. Original and thumbnail stay in R2; processing uses memory.
+Private downloads use Payload access checks and `private, no-store` responses. UUID names
+avoid collisions. Used photographs cannot be deleted; removing a book preserves its photo.
 
-`Employees.role` — обязательный select `admin | librarian`, по умолчанию `librarian`.
-Карточки Members по-прежнему не имеют авторизации.
-
-| Действие | admin | librarian | Анонимный пользователь |
-| --- | --- | --- | --- |
-| Создать, читать, изменять Authors / Books / Members | Да | Да | Нет |
-| Удалить Authors | Да | Нет | Нет |
-| Удалить Books / Members без истории выдач | Да | Нет | Нет |
-| Удалить Books / Members с историей | Нет | Нет | Нет |
-| Читать Media и файлы, загружать и изменять фотографии | Да | Да | Нет |
-| Удалить неиспользуемую фотографию из Media и R2 | Да | Нет | Нет |
-| Удалить фотографию, связанную с книгой | Нет | Нет | Нет |
-| Читать, создать выдачу, изменить срок активной выдачи, вернуть книгу | Да | Да | Нет |
-| Изменить закрытую выдачу или удалить выдачу | Нет | Нет | Нет |
-| Читать аккаунты сотрудников | Все | Только свой | Нет |
-| Создать сотрудника, изменить чужой аккаунт и роль | Да | Нет | Нет |
-| Изменить своё имя и пароль | Да | Да | Нет |
-| Изменить свой email | Да | Нет | Нет |
-| Изменить собственную роль / удалить собственный аккаунт | Нет | Нет | Нет |
-| Удалить другого сотрудника / разблокировать аккаунт | Да | Нет | Нет |
-
-В `src/access` находятся общие функции прав. Они используют только `req.user`, который
-даёт встроенная авторизация Payload. Роль не берётся из тела запроса, URL или `context`.
-Чтение и обновление Employees для библиотекаря возвращают ограничение `id = req.user.id`.
-Массовые изменения ролей и удаления для администратора исключают его собственный ID.
-Поле `role` отдельно защищено field-level access control. Collection access отклоняет
-прямую попытку повысить собственную роль до того, как Payload удалит запрещённые поля.
-Библиотекарь может менять только своё имя и пароль; email и роль защищены отдельно,
-служебные поля авторизации защищает Payload.
-
-Все шесть коллекций явно закрыты от анонимных запросов. Те же функции действуют при
-REST-запросах и Local API с `overrideAccess: false`, в том числе при `depth` / `populate`.
-Endpoint возврата передаёт исходный `req` и не обходит права или блокировки документа.
-Стандартная админка использует эти permissions: библиотекарь видит каталог и выдачи,
-редактирует свой аккаунт через Account; раздел управления сотрудниками скрыт.
-Кнопки создания, удаления и изменения роли соответствуют серверным permissions.
-
-Миграция `20261014_140034_employee_roles` проверяет первоначальное состояние сотрудников
-под блокировкой таблицы. При обновлении существующей базы она требует единственную
-запись с подтверждённым ID 1 и назначает `admin` только ей; при неоднозначности прерывается.
-Другие аккаунты автоматически администраторами не становятся. На пустой базе назначать
-роль некому. Ранее применённые миграции не изменялись.
-
-`pnpm test:access` проверяет права обеих ролей и анонимного пользователя через REST и
-Local API: каталог, связанные записи, выдачу/возврат, историю, создание сотрудников,
-чужой аккаунт, своё имя и пароль, прямое повышение роли, массовые запросы и попытки
-использовать `overrideAccess` / `context` в запросе. Для UI можно подготовить фикстуры
-командой `pnpm test:access prepare-ui` и удалить их `pnpm test:access cleanup-ui`.
-Приватный временный файл содержит только данные и учётные данные временных сотрудников;
-он удаляется после проверки, пароли и токены не выводятся и не записываются в репозиторий.
-
-Для ручной проверки войдите под admin: Employees доступен, новый сотрудник получает
-librarian по умолчанию, чужую роль можно менять, собственная роль и удаление недоступны.
-Под librarian Employees отсутствует в меню; через Account доступны своё имя и пароль,
-а роль и email не редактируются. Создание и редактирование каталога, выдача и возврат
-доступны, удаление записей недоступно. После выхода данные через API недоступны.
-
-## Фотографии и приватное R2
-
-`Books.photo` — необязательная связь с одной записью `Media`. Одна фотография может
-использоваться несколькими книгами. Книги без фотографии продолжают работать.
-Media хранит обязательное описание Alt, метаданные оригинала и миниатюры; бинарные файлы
-хранятся в приватном R2. Node.js использует официальный `@payloadcms/storage-s3` **3.90.2**
-через S3 API, `region: auto`, endpoint из окружения и обработчик изображений sharp **0.34.5**.
-`@payloadcms/storage-r2` для Cloudflare Workers здесь не используется.
-
-В `.env` или секретах окружения задайте:
-
-- `R2_BUCKET` — имя приватного bucket.
-- `R2_ENDPOINT` — HTTPS origin S3 API Cloudflare R2 без пути bucket, query и публичного домена.
-- `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` — S3 credentials с чтением, записью и удалением
-  объектов только нужного bucket. Интеграционные проверки используют также listing своего
-  уникального префикса. Не отключайте приватность bucket и не включайте публичный R2-домен.
-
-Не записывайте значения в README, команды истории или Git. `.env.example` содержит только
-пустые переменные и пояснения. После добавления переменных перезапустите процесс приложения.
-На новой базе примените все миграции (`pnpm migrate`, `pnpm migrate:status`), затем создайте
-первого Admin стандартной формой по инструкции запуска с нуля. На существующей базе новая
-миграция добавляет Media и nullable `books.photo_id`, не изменяя книги или сотрудников.
-
-### Ограничения и доступ
-
-- JPEG, PNG и WebP, максимум **3 МиБ (3 × 1024 × 1024 байт)** на файл.
-- Не более **4096 пикселей по каждой стороне и 16 000 000 пикселей всего**.
-  Анимация не поддерживается. Миниатюра вписывается в 320×320 без увеличения.
-- Сервер сверяет сигнатуру, MIME и расширение, проверяет размер реального Buffer,
-  метаданные и полностью декодирует пиксели через sharp с ограничением числа пикселей.
-  SVG, GIF, повреждённые и замаскированные файлы отклоняются до отправки в R2.
-  Действуют также multipart-лимит и проверка Local API, а не только ограничение file picker.
-- Обработка оригинала и миниатюры выполняется в памяти. `useTempFiles: false`,
-  `disableLocalStorage: true`, загрузки по URL и прямые клиентские загрузки в R2 выключены.
-- Имена получают серверный UUID под `libdesk/media/`. Клиент не выбирает storage identity,
-  prefix или URL. Одинаковые исходные имена не перезаписывают общий объект.
-- Admin и librarian читают, загружают и изменяют Media. Удаляет только admin, если
-  фотография не используется ни одной книгой. Проверка связей использует
-  `overrideAccess: false`; PostgreSQL дополнительно защищает ссылку через `ON DELETE RESTRICT`.
-  Удаление книги или снятие Photo сохраняет Media и объекты R2.
-- Файлы и миниатюры доступны через `/api/media/file/...` с проверкой `Media.access.read`.
-  Анонимному пользователю закрыты и REST-запись, и сам URL файла. Подписанные ссылки и
-  `disablePayloadAccessControl` не используются. Ответы содержат `Cache-Control: private,
-  no-store`, `CDN-Cache-Control: no-store`, `Vary: Cookie, Authorization, Origin` и `nosniff`.
-- Ошибка R2 возвращает понятный `503`. Upload hook завершается до commit PostgreSQL и
-  проверяет наличие оригинала и миниатюры через S3 HEAD; неуспешная загрузка откатывает
-  запись, локальная копия вместо R2 не создаётся. При сбое выполняется попытка удалить
-  только новые UUID-объекты. Удаление Media ожидает результат удаления объектов, не скрывая
-  ошибку адаптера. PostgreSQL и R2 не имеют общей распределённой транзакции: при аварийном
-  завершении процесса или частичном сетевом сбое возможны бесхозные объекты;
-  автоматического сборщика таких объектов пока нет.
-
-### Проверки
-
-Запустите локальный сервер с development-базой и настоящим R2, затем во втором терминале
-с тем же окружением:
+## Checks
 
 ```sh
+pnpm check                 # fast: configuration tests and TypeScript
+pnpm test:loans            # focused integration suite, local app + matching DB required
+pnpm test:access
 pnpm test:media
 pnpm test:media:unavailable
-pnpm test
-pnpm typecheck
+pnpm test:inline
+pnpm test                 # complete integration run before release
 pnpm build
+pnpm start
 ```
 
-Первый набор проверяет реальные оригиналы и миниатюры в R2, форматы и лимиты,
-REST / Local API с `overrideAccess: false`, обе роли, анонимную загрузку и скачивание,
-приватные ответы (включая Range и ETag), связи и удаление объектов.
-`test:media:unavailable` в отдельном CLI-процессе подставляет недоступный endpoint
-и синтетические credentials, проверяет `503` и отсутствие сохранённой записи.
-`.env` и настройки работающего сервера не изменяются.
+Integration tests require a running local server and real test PostgreSQL / R2 settings.
+They create scoped fixtures and clean up only those records and objects. Do not target the
+live demo or run suites concurrently. Run focused checks during development and one complete
+suite / production build before release. See detailed notes for isolated production checks.
 
-Фикстуры получают префикс `LIBDESK-TEST-<UUID>-`; тесты перечисляют и удаляют только
-собственные объекты, не очищают bucket и сверяют сохранность исходных данных.
-Если процесс прерван и очистка не завершилась, используйте напечатанный тестом префикс:
-`pnpm test:media recover LIBDESK-TEST-<UUID>-`. Команда проверяет принадлежность записей
-и объектов этому точному префиксу, применяет обычные правила удаления Media и не очищает
-bucket целиком. Публичного endpoint или флага обхода правил для очистки нет.
-Для UI доступны `pnpm test:media prepare-ui`, `pnpm test:media verify-ui` после загрузки
-и перезапуска приложения, затем `pnpm test:media cleanup-ui`. Credentials временного
-сотрудника и путь PNG лежат в приватном временном манифесте ОС; он удаляется при очистке.
-Не запускайте другие тесты между подготовкой и очисткой UI-фикстур.
-PNG на диске здесь — входной файл браузерной проверки, а не временное хранилище приложения.
+## Design decisions and scope
 
-Ручная проверка:
+Payload provides authentication, forms, lists and REST operations in the same Next.js app;
+custom code extends its admin rather than building another admin frontend. PostgreSQL fits
+relational lending history and database-enforced concurrency. Neon and R2 meet the managed
+DB / external object-storage requirements without a separate backend service. GraphQL is off.
 
-1. Войдите сотрудником. В Books создайте или откройте тестовый экземпляр, в Photo
-   выберите Upload / Create New, загрузите JPEG, PNG или WebP и заполните Alt.
-   Сохраните Media в стандартном drawer, затем книгу: фотография должна отображаться в карточке.
-2. Откройте Media, проверьте оригинал и миниатюру. Перезапустите сервер и вновь откройте книгу.
-3. Повторите с запрещённым форматом, повреждённым изображением и файлом больше 3 МиБ:
-   сохранение отклоняется. У librarian нет удаления, у admin нет удаления используемого фото.
-4. Скопируйте обычный файловый URL (без токенов), выйдите и откройте его: скачивание запрещено.
-5. Отвяжите фото от всех тестовых книг. Оно остаётся в Media/R2. Под admin удалите его
-   из Media и убедитесь, что оригинал и миниатюра удалены из R2. Удаляйте только свои фикстуры.
-6. Для production выполните `pnpm build`, затем `pnpm start --hostname 127.0.0.1 --port 3100`
-   с `SERVER_URL=http://127.0.0.1:3100` при сборке и запуске и повторите загрузку/отображение.
+Deliberately omitted: OAuth, the optional AI field assistant (no model provider/key configured),
+reservations, fines, notification delivery, public reader accounts and a separate edition model.
+Custom controls/messages currently use Russian alongside Payload's English defaults.
 
-AI и публикация приложения — следующие отдельные шаги.
+With more time: unified UI localization, a grounded field-help assistant, outbound email,
+monitoring/backups and storage reconciliation. PostgreSQL and R2 have no shared transaction;
+crashes or partial failures can leave objects or file references needing repair. Recovery
+attempts are scoped, but there is no background reconciler. Password-reset email delivery
+is not configured. These limitations are described in the deployment guide.

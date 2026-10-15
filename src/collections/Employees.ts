@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { deleteEmployees, protectOwnAccount, readEmployees, updateEmployees, updateRole } from '../access/employees'
 import { isAdmin, isEmployee } from '../access/roles'
+import { secureCookies } from '../serverURL'
 
 export const Employees: CollectionConfig = {
   slug: 'employees',
@@ -8,7 +9,7 @@ export const Employees: CollectionConfig = {
     singular: 'Employee',
     plural: 'Employees',
   },
-  auth: true,
+  auth: { cookies: { secure: secureCookies, sameSite: 'Lax' } },
   access: {
     admin: isEmployee,
     create: isAdmin,

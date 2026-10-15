@@ -1,0 +1,9 @@
+.git
+.next
+.pnpm-store
+.libdesk-demo
+node_modules
+.env
+.env.*
+*.log
+*.tsbuildinfo

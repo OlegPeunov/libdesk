@@ -13,3 +13,6 @@ coverage/
 # Keep real credentials local; only the empty template belongs in Git.
 .env*
 !.env.example
+
+# Local ownership journals for CLI demo maintenance (no credentials).
+.libdesk-demo/
