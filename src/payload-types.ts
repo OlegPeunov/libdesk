@@ -181,7 +181,7 @@ export interface Author {
 export interface Book {
   id: number;
   /**
-   * Optional shared photograph. Upload here or choose Media. Removing this link does not delete the file.
+   * Optional shared photograph: JPEG, PNG, WEBP, up to 3 MiB, 4096 pixels per side and 16 megapixels. Upload here or choose Media. Removing this link does not delete the file.
    */
   photo?: (number | null) | Media;
   /**
@@ -271,7 +271,7 @@ export interface Member {
 export interface Loan {
   id: number;
   /**
-   * One physical copy. Cannot be changed after the loan is created.
+   * One physical copy. Only one active loan per copy is allowed. Cannot be changed after the loan is created.
    */
   book: number | Book;
   /**
@@ -279,15 +279,15 @@ export interface Loan {
    */
   member: number | Member;
   /**
-   * Issue date and time. Cannot be changed after creation.
+   * Issue date and time; defaults to the current time. Cannot be changed after creation.
    */
   issuedAt: string;
   /**
-   * Must be after issue time. Can be extended while the loan is active.
+   * Must be strictly after issue time. Can be changed while the loan is active; closed loans cannot be edited. A loan is overdue only when this time is in the past and returnedAt is empty; overdue status is not stored separately.
    */
   dueAt: string;
   /**
-   * Empty means active. A return closes the loan permanently.
+   * Empty means active. Must not be earlier than issue time. A return closes the loan permanently: it cannot be edited or reopened.
    */
   returnedAt?: string | null;
   updatedAt: string;

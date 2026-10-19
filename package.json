@@ -30,7 +30,9 @@
     "test:media:unavailable": "payload run tests/media.integration.ts unavailable",
     "test:inline": "payload run tests/inline.integration.ts",
     "test:config": "node --test tests/serverURL.test.mjs",
-    "test": "pnpm test:config && pnpm test:loans && pnpm test:access && pnpm test:media && pnpm test:media:unavailable && pnpm test:inline"
+    "test:ai": "payload run tests/ai.unit.ts",
+    "test:ai:integration": "payload run tests/ai.integration.ts",
+    "test": "pnpm test:config && pnpm test:ai && pnpm test:ai:integration && pnpm test:loans && pnpm test:access && pnpm test:media && pnpm test:media:unavailable && pnpm test:inline"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1151.0",

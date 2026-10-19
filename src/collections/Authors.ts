@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isEmployee } from '../access/roles'
+import { fieldAssistant } from '../ai/context'
 
 export const Authors: CollectionConfig = {
   slug: 'authors',
@@ -15,6 +16,7 @@ export const Authors: CollectionConfig = {
   defaultSort: 'name',
   access: { create: isEmployee, read: isEmployee, update: isEmployee, delete: isAdmin },
   fields: [
+    fieldAssistant,
     {
       name: 'name',
       type: 'text',

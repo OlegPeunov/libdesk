@@ -14,6 +14,7 @@ import { MAX_FILE_BYTES } from './media/image'
 import { privateMediaStorage } from './media/storage'
 import { loanActiveIndex, loanReferences } from './database/loanSchema'
 import { serverURL } from './serverURL'
+import { helpAnswer, helpDefinition } from './ai/endpoints'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -38,6 +39,7 @@ export default buildConfig({
     },
   },
   collections: [Employees, Authors, Books, Members, Loans, Media],
+  endpoints: [helpDefinition, helpAnswer],
   sharp,
   plugins: [privateMediaStorage],
   upload: { useTempFiles: false, abortOnLimit: true, limits: { fileSize: MAX_FILE_BYTES, files: 1, fields: 20, fieldSize: 64 * 1024 }, requestSizeLimit: MAX_FILE_BYTES + 128 * 1024, responseOnLimit: 'Изображение должно быть не больше 3 МиБ.' },

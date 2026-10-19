@@ -54,11 +54,21 @@ Configure these variables in the hosting project's **Production** environment:
 | `R2_ACCESS_KEY_ID` | Bucket-scoped S3 access key |
 | `R2_SECRET_ACCESS_KEY` | Corresponding secret key |
 | `ENABLE_EXPERIMENTAL_COREPACK` | `1` on Vercel, to use the exact pnpm version in `packageManager` |
+| `OPENROUTER_API_KEY` | Optional server secret enabling the AI field assistant; keep out of client bundles |
+| `OPENROUTER_MODEL` | Optional free model slug (`:free`); empty uses `openrouter/free`; paid models are rejected |
 
 Keep all credentials in the provider's environment settings, never in Git or
 `vercel.json`. Build and runtime need the same application variables. Preview
 deployments should use their own database, credentials and origin; do not share
 production credentials with arbitrary preview branches.
+
+The AI assistant is included in the published application. Its Production key is
+stored as a Vercel secret and the configured model is `openrouter/free`. Only the
+two AI variables were added for this release; database, R2 and origin settings
+were preserved. Vercel performed the production build; no local build or database
+migration was needed. Missing AI settings do not prevent catalog/login operation.
+The per-process AI request guard is not a shared Vercel quota; use OpenRouter key
+limits to control total usage. See the README for failure handling and AI checks.
 
 The application requires an explicit `SERVER_URL` in production. It rejects
 external HTTP origins. HTTPS enables the authentication cookie's `Secure` flag;

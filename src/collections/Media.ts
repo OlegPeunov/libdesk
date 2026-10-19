@@ -3,6 +3,7 @@ import { isEmployee } from '../access/roles'
 import { deleteUnusedMedia, protectBookPhoto } from '../media/access'
 import { IMAGE_MIME_TYPES, MAX_IMAGE_PIXELS, prepareMedia } from '../media/image'
 import { privateFileHeaders } from '../media/storage'
+import { fieldAssistant } from '../ai/context'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -29,5 +30,5 @@ export const Media: CollectionConfig = {
     imageSizes: [{ name: 'thumbnail', width: 320, height: 320, fit: 'inside', withoutEnlargement: true }],
     modifyResponseHeaders: ({ headers }) => privateFileHeaders(headers),
   },
-  fields: [{ name: 'alt', type: 'text', required: true, maxLength: 200, admin: { description: 'Describe the photograph for accessibility. Editing this shared record affects every linked book.' } }],
+  fields: [fieldAssistant, { name: 'alt', type: 'text', required: true, maxLength: 200, admin: { description: 'Describe the photograph for accessibility. Editing this shared record affects every linked book.' } }],
 }

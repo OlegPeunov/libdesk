@@ -35,6 +35,10 @@ messages are currently in Russian; the labels below identify the relevant contro
    and deletion are unavailable. Catalog maintenance, lending, returns and the two
    inline editors still work. Account allows the librarian to change their own
    name and password, not their role or another employee's account.
+7. Open **AI-помощник по полям** in the published release
+   at the top of a Book or Loan form. Choose ISBN / inventory number or Due At,
+   ask how to fill it out, and compare the answer with the displayed real field
+   description. The helper never saves the form or changes library records.
 
 To create a loan, choose a copy without an active loan. A second active loan for
 the same copy is rejected, including two concurrent requests. Dates and immutable

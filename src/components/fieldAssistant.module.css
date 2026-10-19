@@ -1,0 +1,9 @@
+.block { border: 1px solid var(--theme-elevation-150); border-radius: 4px; padding: 16px; margin: 24px 0; }
+.block summary { cursor: pointer; font-weight: 600; }
+.block p { line-height: 1.5; }
+.block label { display: block; margin-top: 12px; }
+.control { display: block; width: 100%; max-width: 720px; padding: 10px; margin: 6px 0 12px; font: inherit; color: var(--theme-text); background: var(--theme-input-bg); border: 1px solid var(--theme-elevation-200); border-radius: 4px; }
+.source { color: var(--theme-elevation-700); }
+.answer { padding: 12px; border-left: 3px solid var(--theme-success-500); }
+.answer p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.error { color: var(--theme-error-600); }

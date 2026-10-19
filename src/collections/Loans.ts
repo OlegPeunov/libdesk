@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { isEmployee, neverDeleteLoan } from '../loans/access'
 import { enforceLoanRules } from '../loans/rules'
 import { returnLoan } from '../loans/returnLoan'
+import { fieldAssistant } from '../ai/context'
 
 export const Loans: CollectionConfig = {
   slug: 'loans',
@@ -30,13 +31,14 @@ export const Loans: CollectionConfig = {
   },
   endpoints: [returnLoan],
   fields: [
+    fieldAssistant,
     {
       name: 'book',
       type: 'relationship',
       relationTo: 'books',
       required: true,
       index: true,
-      admin: { description: 'One physical copy. Cannot be changed after the loan is created.' },
+      admin: { description: 'One physical copy. Only one active loan per copy is allowed. Cannot be changed after the loan is created.' },
     },
     {
       name: 'member',
@@ -53,7 +55,7 @@ export const Loans: CollectionConfig = {
       defaultValue: () => new Date().toISOString(),
       admin: {
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Issue date and time. Cannot be changed after creation.',
+        description: 'Issue date and time; defaults to the current time. Cannot be changed after creation.',
       },
     },
     {
@@ -63,7 +65,7 @@ export const Loans: CollectionConfig = {
       index: true,
       admin: {
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Must be after issue time. Can be extended while the loan is active.',
+        description: 'Must be strictly after issue time. Can be changed while the loan is active; closed loans cannot be edited. A loan is overdue only when this time is in the past and returnedAt is empty; overdue status is not stored separately.',
       },
     },
     {
@@ -72,7 +74,7 @@ export const Loans: CollectionConfig = {
       index: true,
       admin: {
         date: { pickerAppearance: 'dayAndTime' },
-        description: 'Empty means active. A return closes the loan permanently.',
+        description: 'Empty means active. Must not be earlier than issue time. A return closes the loan permanently: it cannot be edited or reopened.',
       },
     },
   ],

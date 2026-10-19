@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { canDeleteWithNoLoans, protectLoanHistory } from '../loans/access'
 import { isEmployee } from '../access/roles'
+import { fieldAssistant } from '../ai/context'
 
 export const Members: CollectionConfig = {
   slug: 'members',
@@ -18,6 +19,7 @@ export const Members: CollectionConfig = {
   access: { create: isEmployee, read: isEmployee, update: isEmployee, delete: canDeleteWithNoLoans('member') },
   hooks: { beforeDelete: [protectLoanHistory('member')] },
   fields: [
+    fieldAssistant,
     {
       name: 'name',
       type: 'text',

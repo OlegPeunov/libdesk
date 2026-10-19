@@ -20,11 +20,11 @@ copy, not a book edition.
 | Security | CSRF origins, HttpOnly / SameSite cookies, Secure cookies over HTTPS, server validation and private downloads |
 | Managed database | PostgreSQL adapter; demo / development use managed Neon rather than an embedded database |
 | Meaningful reproducible demo data | Deterministic 572-record namespace; seed, check and confirmed scoped reset commands |
-| Live deployment / HTTPS / static assets | Vercel configuration and deployment checklist; public URL must be verified after hosting authorization |
+| Live deployment / HTTPS / static assets | https://libdesk.vercel.app/admin; public HTTPS / static assets verified during deployment |
 | Public source and setup instructions | GitHub repository, root README, deployment guide and detailed development notes |
-| Automated tests (bonus) | Loan, access, media and inline integration suites, plus origin/cookie configuration checks |
+| Automated tests (bonus) | Loan, access, media, inline and AI integration suites, plus provider mocks and origin/cookie configuration checks |
 | OAuth (bonus) | Deliberately omitted; local staff authentication is the implemented login method |
-| Grounded AI field assistant (bonus) | Deliberately omitted; no model provider or API credentials are configured |
+| Grounded AI field assistant (bonus) | UI field in five admin forms; authenticated Payload endpoints build real schema context and call OpenRouter; safe provider errors and focused checks. See README for configuration / release status |
 
 ## Scope decisions
 

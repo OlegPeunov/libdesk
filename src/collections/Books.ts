@@ -1,6 +1,8 @@
 import type { CollectionConfig } from 'payload'
 import { canDeleteWithNoLoans, protectLoanHistory } from '../loans/access'
 import { isEmployee } from '../access/roles'
+import { fieldAssistant } from '../ai/context'
+import { IMAGE_MIME_TYPES, MAX_FILE_BYTES, MAX_IMAGE_PIXELS, MAX_IMAGE_SIDE } from '../media/image'
 
 export const Books: CollectionConfig = {
   slug: 'books',
@@ -18,6 +20,7 @@ export const Books: CollectionConfig = {
   access: { create: isEmployee, read: isEmployee, update: isEmployee, delete: canDeleteWithNoLoans('book') },
   hooks: { beforeDelete: [protectLoanHistory('book')] },
   fields: [
+    fieldAssistant,
     {
       name: 'photo',
       type: 'upload',
@@ -28,7 +31,7 @@ export const Books: CollectionConfig = {
         }
         return value
       }] },
-      admin: { description: 'Optional shared photograph. Upload here or choose Media. Removing this link does not delete the file.' },
+      admin: { description: `Optional shared photograph: ${IMAGE_MIME_TYPES.map(value => value.slice(6).toUpperCase()).join(', ')}, up to ${MAX_FILE_BYTES / 1024 / 1024} MiB, ${MAX_IMAGE_SIDE} pixels per side and ${MAX_IMAGE_PIXELS / 1_000_000} megapixels. Upload here or choose Media. Removing this link does not delete the file.` },
     },
     {
       name: 'title',
